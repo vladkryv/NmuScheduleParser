@@ -26,7 +26,7 @@ namespace NmuScheduleParser.Models
                 for (int i = 0; i < Classes.Count; i++)
                 {
                     sb.Append('\n');
-                    sb.Append(Classes[i].ToString());
+                    sb.Append(Classes[i]);
                 }
                 return sb.ToString();
             }

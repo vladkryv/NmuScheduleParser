@@ -26,13 +26,13 @@ namespace NmuScheduleParser.Models
                 sb.Append(" - ");
                 sb.Append(EndTime);
                 sb.Append(")\n");
-                sb.Append(FirstClass.ToString());
+                sb.Append(FirstClass);
                 if (SecondClass != null)
                 {
                     sb.Append(textIndent);
                     sb.Append(textIndent);
                     sb.Append("------------------------------------------\n");
-                    sb.Append(SecondClass.ToString());
+                    sb.Append(SecondClass);
                 }
                 return sb.ToString();
             }

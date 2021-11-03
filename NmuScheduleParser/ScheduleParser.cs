@@ -7,7 +7,7 @@ using NmuScheduleParser.Models;
 
 namespace NmuScheduleParser
 {
-    public class ScheduleParser
+    public static class ScheduleParser
     {
         /// <summary>Returns null if the <b>rawHtml</b> is non-html</summary>
         public static async Task<Schedule> GetScheduleAsync(string rawHtml)
@@ -43,13 +43,13 @@ namespace NmuScheduleParser
             var dateAndDayOfWeek = rawDay.QuerySelector("h4")?.TextContent.Split(" ");
             var date = dateAndDayOfWeek?[0];
             string dayOfWeek = null;
-            if (dateAndDayOfWeek.Length > 1)
+            if (dateAndDayOfWeek?.Length > 1)
                 dayOfWeek = dateAndDayOfWeek[1];
 
             var classes = new List<Class>();
             var rawClasses = rawDay.QuerySelectorAll("tr");
 
-            for (int i = 0; i < rawClasses?.Length; i++)
+            for (int i = 0; i < rawClasses.Length; i++)
             {
                 var rawClass = ParseClass(rawClasses[i]);
                 if (rawClass.FirstClass?.Description.Length > 0)
@@ -75,7 +75,7 @@ namespace NmuScheduleParser
             var countClassInfo = rawClass.InnerHtml.CountSubstring("class=\"link\"");
             if (countClassInfo < 2)
                 firstClass = ParseClassInfo(rawClass.QuerySelector("td:nth-child(3)"));
-            else if (countClassInfo > 1)
+            else // two variant class
             {
                 var classInfo = rawClass.QuerySelector("td:nth-child(3)");
                 string tmp = classInfo?.InnerHtml;
@@ -103,7 +103,7 @@ namespace NmuScheduleParser
             {
                 StartTime = startTime, EndTime = endTime, Number = numberClass,
                 FirstClass = firstClass, SecondClass = secondClass
-            }; ;
+            };
         }
 
         private static ClassInfo ParseClassInfo(IElement rawClassInfo)
@@ -113,7 +113,7 @@ namespace NmuScheduleParser
             if (rawClassInfo.InnerHtml.Contains("class=\"remote_work\""))
             {
                 nameRemote = rawClassInfo.QuerySelector("span.remote_work")?.TextContent;
-                var endIndexRemote = rawClassInfo.InnerHtml.IndexOf("</span>");
+                var endIndexRemote = rawClassInfo.InnerHtml.IndexOf("</span>", StringComparison.Ordinal);
                 if (endIndexRemote != -1)
                 {
                     rawClassInfo.InnerHtml = rawClassInfo.InnerHtml[(endIndexRemote + 7)..]; // 7 = "</span>".Length
@@ -121,10 +121,11 @@ namespace NmuScheduleParser
             }
 
             var divider = "*|*";
-            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml?.Replace("<br>", divider).Replace(" ауд.", divider + "ауд.");
-            var rawResult = rawClassInfo.TextContent?.Split(divider);
-            foreach (var item in rawResult)
+            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", divider).Replace(" ауд.", divider + "ауд.");
+            var rawResult = rawClassInfo.TextContent.Split(divider);
+            for (var index = 0; index < rawResult.Length; index++)
             {
+                var item = rawResult[index];
                 var tmp = item.Trim();
                 if (!string.IsNullOrWhiteSpace(tmp))
                     classInfoDescription.Add(tmp.Replace("////", "//")); // Add and fix url if needed

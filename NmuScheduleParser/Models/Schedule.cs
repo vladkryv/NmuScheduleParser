@@ -15,7 +15,7 @@ namespace NmuScheduleParser.Models
                 var sb = new StringBuilder();
                 for (int i = 0; i < Days?.Count; i++)
                 {
-                    sb.Append(Days[i].ToString());
+                    sb.Append(Days[i]);
                     if (i < Days.Count - 1)
                         sb.Append("\n\n");
                 }
