@@ -11,3 +11,5 @@ Install this [nuget package](../../../NmuScheduleParser/releases/) in your proje
 
 ## Example code
 See example in [NSParserExample/Program.cs](NSParserExample/Program.cs).
+  
+<img src="https://i.imgur.com/wOmlBrf.png" width="75%"/>
