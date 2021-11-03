@@ -25,7 +25,7 @@ namespace NSParserExample
 
                 Day: 
                     string Date
-                    string DayOfWekk
+                    string DayOfWeek
                     List<Class> Classes
 
                 Class:
