@@ -53,9 +53,7 @@ namespace NmuScheduleParser
             {
                 var rawClass = ParseClass(rawClasses[i]);
                 if (rawClass.FirstClass?.Description.Length > 0)
-                {
                     classes.Add(rawClass);
-                }
             }
             return new Day { Date = date, DayOfWeek = dayOfWeek, Classes = classes };
         }
@@ -64,7 +62,7 @@ namespace NmuScheduleParser
         {
             int.TryParse(rawClass.QuerySelector("td:nth-child(1)")?.TextContent, out var numberClass);
             var endTimeStartIndex = 5;
-            var divider = "*|*";
+            const string divider = "*|*";
             string timeClass = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Insert(endTimeStartIndex, divider);
             var startTime = timeClass?.Split(divider)[0].Trim();
             var endTime = timeClass?.Split(divider)[1].Trim();
@@ -78,10 +76,10 @@ namespace NmuScheduleParser
             else // two variant class
             {
                 var classInfo = rawClass.QuerySelector("td:nth-child(3)");
-                string tmp = classInfo?.InnerHtml;
 
                 if (classInfo != null)
                 {
+                    string bak = classInfo.InnerHtml;
                     var startIndex = classInfo.InnerHtml.IndexOf("</div>", StringComparison.Ordinal);
 
                     if (startIndex != -1)
@@ -91,7 +89,7 @@ namespace NmuScheduleParser
                         firstClass = ParseClassInfo(classInfo);
 
                         // remove first and parse
-                        classInfo.InnerHtml = tmp[(startIndex + 6)..]; // 6 = "</div>".Length
+                        classInfo.InnerHtml = bak[(startIndex + 6)..]; // 6 = "</div>".Length
                         secondClass = ParseClassInfo(classInfo);
                     }
                     else
@@ -115,20 +113,17 @@ namespace NmuScheduleParser
                 nameRemote = rawClassInfo.QuerySelector("span.remote_work")?.TextContent;
                 var endIndexRemote = rawClassInfo.InnerHtml.IndexOf("</span>", StringComparison.Ordinal);
                 if (endIndexRemote != -1)
-                {
                     rawClassInfo.InnerHtml = rawClassInfo.InnerHtml[(endIndexRemote + 7)..]; // 7 = "</span>".Length
-                }
             }
 
-            var divider = "*|*";
+            const string divider = "*|*";
             rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", divider).Replace(" ауд.", divider + "ауд.");
             var rawResult = rawClassInfo.TextContent.Split(divider);
             for (var index = 0; index < rawResult.Length; index++)
             {
-                var item = rawResult[index];
-                var tmp = item.Trim();
-                if (!string.IsNullOrWhiteSpace(tmp))
-                    classInfoDescription.Add(tmp.Replace("////", "//")); // Add and fix url if needed
+                var itemDescription = rawResult[index].Trim();
+                if (!string.IsNullOrWhiteSpace(itemDescription))
+                    classInfoDescription.Add(itemDescription.Replace("////", "//")); // Add and fix url if needed
             }
 
             return new ClassInfo { Description = classInfoDescription.ToArray(), NameRemote = nameRemote };
