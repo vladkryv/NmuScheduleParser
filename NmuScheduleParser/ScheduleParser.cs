@@ -9,12 +9,14 @@ namespace NmuScheduleParser
 {
     public static class ScheduleParser
     {
+        private const string TempDivider = "*|*";
+
         /// <summary>Returns null if the <b>rawHtml</b> is non-html</summary>
         public static async Task<Schedule> GetScheduleAsync(string rawHtml)
         {
             if (string.IsNullOrWhiteSpace(rawHtml)) return null;
 
-            rawHtml = rawHtml.Replace("charset=windows-1251", String.Empty);
+            rawHtml = rawHtml.Replace("charset=windows-1251", string.Empty);
             var config = Configuration.Default.WithDefaultLoader();
             var context = BrowsingContext.New(config);
             IDocument document;
@@ -60,12 +62,12 @@ namespace NmuScheduleParser
 
         private static Class ParseClass(IElement rawClass)
         {
-            int.TryParse(rawClass.QuerySelector("td:nth-child(1)")?.TextContent, out var numberClass);
-            var endTimeStartIndex = 5;
-            const string divider = "*|*";
-            string timeClass = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Insert(endTimeStartIndex, divider);
-            var startTime = timeClass?.Split(divider)[0].Trim();
-            var endTime = timeClass?.Split(divider)[1].Trim();
+            int numberClass = int.TryParse(rawClass.QuerySelector("td:nth-child(1)")?.TextContent, out numberClass) ? numberClass : 0;
+            const int endTimeStartIndex = 5;
+            string timeClass = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Insert(endTimeStartIndex, TempDivider);
+            var durationClass = timeClass?.Split(TempDivider);
+            var startTime = durationClass?.Length > 0 ? durationClass[0].Trim() : string.Empty;
+            var endTime = durationClass?.Length > 1 ? durationClass[1].Trim() : string.Empty;
             ClassInfo firstClass = null;
             ClassInfo secondClass = null;
 
@@ -80,16 +82,17 @@ namespace NmuScheduleParser
                 if (classInfo != null)
                 {
                     string bak = classInfo.InnerHtml;
-                    var startIndex = classInfo.InnerHtml.IndexOf("</div>", StringComparison.Ordinal);
+                    const string endFirstClass = "</div>";
+                    var startIndex = classInfo.InnerHtml.IndexOf(endFirstClass, StringComparison.Ordinal);
 
                     if (startIndex != -1)
                     {
                         // remove second and parse
-                        classInfo.InnerHtml = classInfo.InnerHtml[..(startIndex + 6)]; // 6 = "</div>".Length
+                        classInfo.InnerHtml = classInfo.InnerHtml[..(startIndex + endFirstClass.Length)];
                         firstClass = ParseClassInfo(classInfo);
 
                         // remove first and parse
-                        classInfo.InnerHtml = bak[(startIndex + 6)..]; // 6 = "</div>".Length
+                        classInfo.InnerHtml = bak[(startIndex + endFirstClass.Length)..];
                         secondClass = ParseClassInfo(classInfo);
                     }
                     else
@@ -111,14 +114,14 @@ namespace NmuScheduleParser
             if (rawClassInfo.InnerHtml.Contains("class=\"remote_work\""))
             {
                 nameRemote = rawClassInfo.QuerySelector("span.remote_work")?.TextContent;
-                var endIndexRemote = rawClassInfo.InnerHtml.IndexOf("</span>", StringComparison.Ordinal);
+                const string endTagRemote = "</span>";
+                var endIndexRemote = rawClassInfo.InnerHtml.IndexOf(endTagRemote, StringComparison.Ordinal);
                 if (endIndexRemote != -1)
-                    rawClassInfo.InnerHtml = rawClassInfo.InnerHtml[(endIndexRemote + 7)..]; // 7 = "</span>".Length
+                    rawClassInfo.InnerHtml = rawClassInfo.InnerHtml[(endIndexRemote + endTagRemote.Length)..];
             }
 
-            const string divider = "*|*";
-            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", divider).Replace(" ауд.", divider + "ауд.");
-            var rawResult = rawClassInfo.TextContent.Split(divider);
+            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", TempDivider).Replace(" ауд.", TempDivider + "ауд.");
+            var rawResult = rawClassInfo.TextContent.Split(TempDivider);
             for (var index = 0; index < rawResult.Length; index++)
             {
                 var itemDescription = rawResult[index].Trim();

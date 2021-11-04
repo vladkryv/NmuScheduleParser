@@ -66,8 +66,11 @@ namespace NSParserExample
 
             //n=700 should be as url parameter, otherwise it doesn't work
             var response = await client.PostAsync(@"cgi-bin/timetable.cgi?n=700", new ByteArrayContent(body));
-
             var responseContentBytes = await response.Content.ReadAsByteArrayAsync();
+
+            if (!response.IsSuccessStatusCode)
+                Console.WriteLine($"Status code download: {response.StatusCode}");
+
             return encodingWin1251.GetString(responseContentBytes);
         }
     }
