@@ -18,7 +18,7 @@ namespace NSParserExample
         static async Task MainAsync()
         {
             var htmlRaw = await DownloadHtmlSchedule(@"http://nmu.npu.edu.ua", "42ІПЗ");
-            var schedule = await ScheduleParser.GetScheduleAsync(htmlRaw);
+            var schedule = ScheduleParser.GetSchedule(htmlRaw);
             /* 
                 Schedule:
                     List<Day> Days

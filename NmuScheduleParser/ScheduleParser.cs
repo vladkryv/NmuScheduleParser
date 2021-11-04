@@ -1,9 +1,9 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
+using NmuScheduleParser.Models;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using NmuScheduleParser.Models;
 
 namespace NmuScheduleParser
 {
@@ -12,20 +12,16 @@ namespace NmuScheduleParser
         private const string TempDivider = "*|*";
 
         /// <summary>Returns null if the <b>rawHtml</b> is non-html</summary>
-        public static async Task<Schedule> GetScheduleAsync(string rawHtml)
+        public static Schedule GetSchedule(string rawHtml)
         {
             if (string.IsNullOrWhiteSpace(rawHtml)) return null;
 
             rawHtml = rawHtml.Replace("charset=windows-1251", string.Empty);
-            var config = Configuration.Default.WithDefaultLoader();
-            var context = BrowsingContext.New(config);
-            IDocument document;
-
-            try { document = await context.OpenAsync(r => r.Content(rawHtml)); }
-            catch (Exception) { return null; }
-
+            var context = BrowsingContext.New(Configuration.Default);
+            var htmlParser = context.GetService<IHtmlParser>();
+            var document = htmlParser?.ParseDocument(rawHtml);
             var daySelector = "div.container div.row div.col-md-6:not(.col-xs-12)";
-            var days = document.QuerySelectorAll(daySelector);
+            var days = document?.QuerySelectorAll(daySelector);
 
             return new Schedule { Days = ParseRangeDay(days) };
         }
