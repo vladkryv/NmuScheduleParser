@@ -67,7 +67,6 @@ namespace NmuScheduleParser
             ClassInfo firstClass = null;
             ClassInfo secondClass = null;
 
-
             var countClassInfo = rawClass.InnerHtml.CountSubstring("class=\"link\"");
             if (countClassInfo < 2)
                 firstClass = ParseClassInfo(rawClass.QuerySelector("td:nth-child(3)"));
@@ -117,12 +116,18 @@ namespace NmuScheduleParser
             }
 
             rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", TempDivider).Replace(" ауд.", TempDivider + "ауд.");
+            
+            // fix cropped links
+            var links = rawClassInfo.QuerySelectorAll("a");
+            foreach (var link in links) 
+                link.InnerHtml = link.GetAttribute("href") ?? link.InnerHtml;
+
             var rawResult = rawClassInfo.TextContent.Split(TempDivider);
             for (var index = 0; index < rawResult.Length; index++)
             {
                 var itemDescription = rawResult[index].Trim();
                 if (!string.IsNullOrWhiteSpace(itemDescription))
-                    classInfoDescription.Add(itemDescription.Replace("////", "//")); // Add and fix url if needed
+                    classInfoDescription.Add(itemDescription);
             }
 
             return new ClassInfo { Description = classInfoDescription.ToArray(), NameRemote = nameRemote };
