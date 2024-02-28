@@ -9,7 +9,7 @@ namespace NmuScheduleParser
 {
     public static class ScheduleParser
     {
-        private const string TempDivider = "*|*";
+        private const string TempSeparator = "*|*";
 
         /// <summary>Returns null if the <b>rawHtml</b> is non-html</summary>
         public static Schedule GetSchedule(string rawHtml)
@@ -60,8 +60,8 @@ namespace NmuScheduleParser
         {
             int numberClass = int.TryParse(rawClass.QuerySelector("td:nth-child(1)")?.TextContent, out numberClass) ? numberClass : 0;
             const int endTimeStartIndex = 5;
-            string timeClass = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Insert(endTimeStartIndex, TempDivider);
-            var durationClass = timeClass?.Split(TempDivider);
+            string timeClass = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Insert(endTimeStartIndex, TempSeparator);
+            var durationClass = timeClass?.Split(TempSeparator);
             var startTime = durationClass?.Length > 0 ? durationClass[0].Trim() : string.Empty;
             var endTime = durationClass?.Length > 1 ? durationClass[1].Trim() : string.Empty;
             ClassInfo firstClass = null;
@@ -115,14 +115,14 @@ namespace NmuScheduleParser
                     rawClassInfo.InnerHtml = rawClassInfo.InnerHtml[(endIndexRemote + endTagRemote.Length)..];
             }
 
-            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", TempDivider).Replace(" ауд.", TempDivider + "ауд.");
+            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", TempSeparator).Replace(" ауд.", TempSeparator + "ауд.");
             
             // fix cropped links
             var links = rawClassInfo.QuerySelectorAll("a");
             foreach (var link in links) 
                 link.InnerHtml = link.GetAttribute("href") ?? link.InnerHtml;
 
-            var rawResult = rawClassInfo.TextContent.Split(TempDivider);
+            var rawResult = rawClassInfo.TextContent.Split(TempSeparator);
             for (var index = 0; index < rawResult.Length; index++)
             {
                 var itemDescription = rawResult[index].Trim();
