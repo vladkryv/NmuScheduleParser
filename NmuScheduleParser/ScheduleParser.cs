@@ -9,8 +9,6 @@ namespace NmuScheduleParser
 {
     public static class ScheduleParser
     {
-        private const string TempSeparator = "*|*";
-
         /// <summary>Returns null if the <b>rawHtml</b> is non-html</summary>
         public static Schedule GetSchedule(string rawHtml)
         {
@@ -58,12 +56,14 @@ namespace NmuScheduleParser
 
         private static Class ParseClass(IElement rawClass)
         {
-            int numberClass = int.TryParse(rawClass.QuerySelector("td:nth-child(1)")?.TextContent, out numberClass) ? numberClass : 0;
+            int classNumber = int.TryParse(rawClass.QuerySelector("td:nth-child(1)")?.TextContent, out classNumber) ? classNumber : 0;
+            
+            string rawClassDuration = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Trim();
             const int endTimeStartIndex = 5;
-            string timeClass = rawClass.QuerySelector("td:nth-child(2)")?.TextContent.Insert(endTimeStartIndex, TempSeparator);
-            var durationClass = timeClass?.Split(TempSeparator);
-            var startTime = durationClass?.Length > 0 ? durationClass[0].Trim() : string.Empty;
-            var endTime = durationClass?.Length > 1 ? durationClass[1].Trim() : string.Empty;
+            bool isValidTimeString = rawClassDuration?.Length == 10; // "09:3010:50"
+            var startTime = isValidTimeString ? rawClassDuration[..endTimeStartIndex] : string.Empty;
+            var endTime = isValidTimeString ? rawClassDuration[endTimeStartIndex..] : string.Empty;
+            
             ClassInfo firstClass = null;
             ClassInfo secondClass = null;
 
@@ -97,7 +97,7 @@ namespace NmuScheduleParser
 
             return new Class
             {
-                StartTime = startTime, EndTime = endTime, Number = numberClass,
+                StartTime = startTime, EndTime = endTime, Number = classNumber,
                 FirstClass = firstClass, SecondClass = secondClass
             };
         }
@@ -105,6 +105,7 @@ namespace NmuScheduleParser
         private static ClassInfo ParseClassInfo(IElement rawClassInfo)
         {
             var classInfoDescription = new List<string>();
+            
             string nameRemote = null;
             if (rawClassInfo.InnerHtml.Contains("class=\"remote_work\""))
             {
@@ -115,14 +116,16 @@ namespace NmuScheduleParser
                     rawClassInfo.InnerHtml = rawClassInfo.InnerHtml[(endIndexRemote + endTagRemote.Length)..];
             }
 
-            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml.Replace("<br>", TempSeparator).Replace(" ауд.", TempSeparator + "ауд.");
+            rawClassInfo.InnerHtml = rawClassInfo.InnerHtml
+                .Replace("<br>", "\n")
+                .Replace(" ауд.", "\nауд.");
             
             // fix cropped links
             var links = rawClassInfo.QuerySelectorAll("a");
             foreach (var link in links) 
                 link.InnerHtml = link.GetAttribute("href") ?? link.InnerHtml;
 
-            var rawResult = rawClassInfo.TextContent.Split(TempSeparator);
+            var rawResult = rawClassInfo.TextContent.Split("\n");
             for (var index = 0; index < rawResult.Length; index++)
             {
                 var itemDescription = rawResult[index].Trim();
