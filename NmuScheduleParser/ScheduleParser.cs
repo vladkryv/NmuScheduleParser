@@ -18,7 +18,7 @@ namespace NmuScheduleParser
             var context = BrowsingContext.New(Configuration.Default);
             var htmlParser = context.GetService<IHtmlParser>();
             var document = htmlParser?.ParseDocument(rawHtml);
-            var daySelector = "div.container div.row div.col-md-6:not(.col-xs-12)";
+            var daySelector = "div.container div.row div.col-print-6";
             var days = document?.QuerySelectorAll(daySelector);
 
             return new Schedule { Days = ParseRangeDay(days) };
